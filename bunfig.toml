@@ -1,0 +1,6 @@
+# Bun configuration for @gym/mcp-server
+# https://bun.sh/docs/runtime/bunfig
+
+[test]
+preload = ["./src/testing/setup.ts"]
+coverage = true
