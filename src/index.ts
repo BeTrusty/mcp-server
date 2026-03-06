@@ -22,15 +22,26 @@ app.get("/health", (c) => {
   });
 });
 
-// MCP endpoint — uses WebStandardStreamableHTTPServerTransport, compatible with
-// Bun, Cloudflare Workers, Deno, and Node.js 18+. Stateless: new instance per
-// request. enableJsonResponse avoids SSE streaming (incompatible with Vercel
-// serverless functions).
+// MCP endpoint — stateless, JSON-only (no SSE).
+// GET is blocked: SSE requires long-lived connections incompatible with
+// Vercel serverless. MCP clients (OpenCode, Claude, etc.) fall back to
+// POST-only when they receive 405 on GET.
+app.get("/mcp", (c) => {
+  return c.json(
+    {
+      jsonrpc: "2.0",
+      error: { code: -32000, message: "SSE not supported in serverless. Use POST." },
+      id: null,
+    },
+    405,
+  );
+});
+
 app.all("/mcp", async (c) => {
   const mcpServer = createMcpServer();
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined, // stateless
-    enableJsonResponse: true,
+    enableJsonResponse: true,      // JSON response, no ReadableStream / SSE
   });
   await mcpServer.connect(transport);
   return transport.handleRequest(c.req.raw);
