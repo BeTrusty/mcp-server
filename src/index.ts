@@ -22,10 +22,11 @@ app.get("/health", (c) => {
   });
 });
 
-// MCP endpoint — stateless: new transport per request (pricing is request/response)
-const mcpServer = createMcpServer();
-
+// MCP endpoint — stateless: new server + transport per request.
+// McpServer cannot be connected to multiple transports, so we instantiate
+// both per request to avoid "already connected" errors.
 app.all("/mcp", async (c) => {
+  const mcpServer = createMcpServer();
   const transport = new StreamableHTTPTransport();
   await mcpServer.connect(transport);
   return transport.handleRequest(c);
