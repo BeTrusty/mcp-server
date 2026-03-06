@@ -25,9 +25,10 @@ app.get("/health", (c) => {
 // MCP endpoint — stateless: new server + transport per request.
 // McpServer cannot be connected to multiple transports, so we instantiate
 // both per request to avoid "already connected" errors.
+// enableJsonResponse: true avoids SSE streaming (incompatible with Vercel serverless Bun).
 app.all("/mcp", async (c) => {
   const mcpServer = createMcpServer();
-  const transport = new StreamableHTTPTransport();
+  const transport = new StreamableHTTPTransport({ enableJsonResponse: true });
   await mcpServer.connect(transport);
   return transport.handleRequest(c);
 });
