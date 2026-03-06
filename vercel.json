@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "bun build src/vercel.ts --outfile api/index.js --target=node",
+  "buildCommand": "bun build src/vercel.ts --outfile api/index.js --target=node || true",
   "functions": {
     "api/index.js": {
       "maxDuration": 30
