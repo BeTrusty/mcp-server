@@ -1,4 +1,4 @@
-import { StreamableHTTPTransport } from "@hono/mcp";
+import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -22,15 +22,18 @@ app.get("/health", (c) => {
   });
 });
 
-// MCP endpoint — stateless: new server + transport per request.
-// McpServer cannot be connected to multiple transports, so we instantiate
-// both per request to avoid "already connected" errors.
-// enableJsonResponse: true avoids SSE streaming (incompatible with Vercel serverless Bun).
+// MCP endpoint — uses WebStandardStreamableHTTPServerTransport, compatible with
+// Bun, Cloudflare Workers, Deno, and Node.js 18+. Stateless: new instance per
+// request. enableJsonResponse avoids SSE streaming (incompatible with Vercel
+// serverless functions).
 app.all("/mcp", async (c) => {
   const mcpServer = createMcpServer();
-  const transport = new StreamableHTTPTransport({ enableJsonResponse: true });
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    sessionIdGenerator: undefined, // stateless
+    enableJsonResponse: true,
+  });
   await mcpServer.connect(transport);
-  return transport.handleRequest(c);
+  return transport.handleRequest(c.req.raw);
 });
 
 // 404 handler
